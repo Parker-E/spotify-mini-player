@@ -4,6 +4,7 @@ from PIL import Image
 from PIL import ImageTk
 import time
 from controllers import *
+from vslider import *
 
 
 class App(tk.Frame):
@@ -100,7 +101,7 @@ class Player(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
         self.pController = self.master.pController
-        self.songInfo = False
+        self.songInfo = None
         # body content container
         self.playerContentContainer = tk.Frame(self)
         self.playerContentContainer.pack(side='top', fill='both')
@@ -122,8 +123,7 @@ class Player(tk.Frame):
         self.songLabel = tk.Label(self.songInfo, text='- Song')
         self.songLabel.pack(padx=5, side='left')
         # volume slider
-        self.volumeSliderStyle = ttk.Style()
-        self.volumeSlider = ttk.Scale(self.songInfoContainer, orient='horizontal', length='200', from_=0, to_=100)
+        self.volumeSlider = VSlider(self.songInfoContainer, from_=0, to_=100, command=self.pController.setVolume)
         self.volumeSlider.pack(pady=(50, 10), padx=5, side='left')
         # footer container
         self.playerFooterContainer = tk.Frame(self)
@@ -175,13 +175,13 @@ class Player(tk.Frame):
 
     def nextSong(self):
         self.pController.nextSong()
-        time.sleep(.3)
+        time.sleep(.15)
         self.updateSongInfo()
         pass
 
     def prevSong(self):
         self.pController.prevSong()
-        time.sleep(.3)
+        time.sleep(.15)
         self.updateSongInfo()
         pass
 

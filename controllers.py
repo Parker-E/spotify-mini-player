@@ -62,6 +62,7 @@ class PlayerController():
         pass
 
     def setVolume(self):
+        print('set volume')
         pass
 
     def getPlaylist(self):

@@ -1,81 +1,91 @@
+# tyvm to http://samclane.github.io/Gradient-Scale-Python/
+
 import tkinter as tk
-import math
 
 
-# class VSlider(tk.Frame):
-#     def __init__(self, master):
-#         tk.Frame.__init__(self, master)
-#         self.width = 100
-#         self.height = 10
-#         self.x = 50
-#         self.y = 5
-#         self.canvWidth = 12
-#         self.canvHeight = 12
-#         self._focus = False
-#         # vslider.bind("<Button-1>", callback_1)
-#         # vslider.bind("<B1-Motion>", callback_2)
+class VSlider(tk.Canvas):
+    def __init__(self, master, val=50, variable=None, width=200, height=6, from_=0, to_=100, handle=None, command=None, **kwargs):
+        tk.Canvas.__init__(self, master, width=width, height=height, **kwargs)
+        self._value = val
+        self._max = to_
+        self._min = from_
+        self._range = self._max - self._min
+        self.command = command
+        if variable is not None:
+            try:
+                val = int(variable.get())
+            except Exception as e:
+                print(e)
+        else:
+            self._value = tk.IntVar(self)
+        val = max(min(self._max, val), self._min)
+        self._value.set(val)
+        self._value.trace('w', self._updateVal)
+
+        self.bind('<Configure>', lambda e: self._drawSlider(val))
+        self.bind("<ButtonPress-1>", self._onClick)
+        self.bind('<ButtonRelease-1>', self._onRelease)
+        self.bind("<B1-Motion>", self._onMove)
+
+    def _drawSlider(self, val):
+        self.delete("trough")
+        self.delete("handle")
+        width = self.winfo_width()
+        height = self.winfo_height()
+
+        # draw trough
+        self.create_line(0, 0, width, height, width=width, fill='red', tags='trough')
+        # TODO:
+        # make these ovals work to add rounded edges to the trough
+        # self.create_oval(0, 0, height, height, fill='green')
+
+        # draw handle
+        x = (val - self._min) / float(self._range) * width
+        self.create_line(x, 0, x, height, width=3, fill='yellow', tags='handle')
+
+    def _onClick(self, event):
+        x = event.x
+        if x >= 0:
+            width = self.winfo_width()
+            self.coords(self.find_withtag('handle'), x, 0, x, self.winfo_height())
+            self._value.set(round((float(self._range) * x) / width + self._min, 2))
+            if self.command is not None:
+                self.command()
+
+    def _onRelease(self, event):
+        print(self._value.get())
+        if self.command is not None:
+            self.command()
+        pass
+
+    def _onMove(self, event):
+        if event.x >= 0:
+            w = self.winfo_width()
+            x = min(max(abs(event.x), 0), w)
+            self.coords(self.find_withtag('handle'), x, 0, x, self.winfo_height())
+            self._value.set(round((float(self._range) * x) / w + self._min, 2))
+
+    def _updateVal(self, *args):
+        val = int(self._value.get())
+        val = min(max(val, self._min), self._max)
+        self.set(val)
+        self.event_generate("<<ValueChanged>>")
+
+    def get(self):
+        coords = self.coords('handle')
+        width = self.winfo_width()
+        return round(self._range * coords[0] / width, 2)
+
+    def set(self, val):
+        width = self.winfo_width()
+        x = (val - self._min) / float(self._range) * width
+        for s in self.find_withtag('handle'):
+            self.coords(s, x, 0, x, self.winfo_height())
+        self._value.set(val)
 
 
-
-
-#     def separation(self, x_now, y_now, x_dot, y_dot):
-#         sum_squares = (x_now - x_dot)**2 + (y_now - y_dot)**2
-#         distance = int(math.sqrt(sum_squares))
-#         return(distance)
-
-#     def dyn_slider(self, xn, yn, slide_val, kula, tagn):
-#         self.delete(tagn)
-#         self.create_line(xn, yn, xn, slide_val, fill=kula, width=4, tag=tagn)
-#         self.create_rectangle(xn - 5, slide_val - 3, xn + 5, slide_val + 3, fill=kula, tag=tagn)
-#         self.create_text(xn + 15, slide_val, text=str(slide_val), font=('verdana', 6), tag=tagn)
-
-#     def canv_slider(self, xn, yn, length, kula):
-#         y_top = yn - length
-#         self.create_line(xn, yn, xn, y_top, fill="gainsboro", width=6)
-#         self.create_rectangle(xn - 5, yn - 3, xn + 5, yn + 3, fill=kula, tag="knob_active")
-#         self.create_text(xn, yn + 10, text='zero', font=('verdana', 8))
-#         self.create_text(xn, y_top - 10, text='max', font=('verdana', 8))
-
-#     def callback_1(self, event):
-#         d1 = self.separation(event.x, event.y, self.x)
-#         if d1 <= 5:
-#             self._focus = True
-
-#     def callback_2(self, event):
-#         global length_1
-#         global x_1
-#         global focus_flag
-#         global slide_1
-#         pos_x = event.x
-#         slide_val = event.y
-
-#         if focus_flag == 1 and slide_val <= y_1 and slide_val >= y_1 - length_1 and pos_x <= x_1 + 10 and pos_x >= x_1 - 10:
-#             dyn_slider(x_1, y_1, slide_val, "red", "slide_red")
-#             slide_1 = slide_val
-
-
-
-# # canv_slider(x_1, y_1, length_1, "red")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+if __name__ == '__main__':
+    root = tk.Tk()
+    slider = VSlider(root)
+    slider.pack()
+    slider.mainloop()
